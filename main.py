@@ -1,7 +1,6 @@
 import os
 import PySimpleGUIQt as sg
 import jikanpy
-from helpers import path_joins
 
 from os import path
 from time import sleep
@@ -11,12 +10,13 @@ from typing import List, Tuple
 from threading import Thread, Event
 from requests import ConnectionError
 from pathvalidate import sanitize_filename
-from jikanpy import exceptions
+# from jikanpy import exceptions
 import youtubesearchpython as yt
 from concurrent.futures.thread import ThreadPoolExecutor
 from concurrent.futures import wait
 
 import muzic_library as ml
+from anime_lists import AnimeList, Mal, Anime
 import mal_manager as mm
 import song_thread as st
 from constants import *
@@ -32,11 +32,11 @@ def progress_callback(window):
     return _callback
 
 def run(window: sg.Window, username, progresses: List[Tuple[sg.Text, sg.ProgressBar]], column: sg.Column, lists=DEFAULT_LISTS,
-                 dupli_mode=0, dir=ml.get_default_dir(), thread_count=5):
+                 dupli_mode=0, dir=ml.get_default_dir(), thread_count=5) -> Tuple[Event, Thread]:
     
     library_thread = Thread(target=ml.init_library, args=(dir,))
     library_thread.start()
-    print('[E] Library thread started')
+    print('[I] Library thread started')
     
     for i in range(len(progresses)):
         progresses[i][0].update(visible=False)
@@ -60,7 +60,7 @@ def run(window: sg.Window, username, progresses: List[Tuple[sg.Text, sg.Progress
                         kwargs={'lists': lists, 'dupli_mode': dupli_mode, 'dir': dir, 'thread_count': thread_count})
     
     library_thread.join()
-    print('[E] Library thread joined')
+    print('[I] Library thread joined')
     
     run_thread.start()
     
@@ -96,7 +96,7 @@ def run_(window: sg.Window, username, progresses: List[Tuple[sg.Text, sg.Progres
                     break
                 
                 print(f'[I] Doing list of type "{list_type}"')
-                fold = path_joins(ml.library_dir, username, list_type)
+                fold = path.join(ml.library_dir, username, list_type)
                 
                 # make anime list folder
                 os.makedirs(fold, exist_ok=True)
@@ -143,7 +143,7 @@ def run_(window: sg.Window, username, progresses: List[Tuple[sg.Text, sg.Progres
                             
                             filename_ = f'{request} ({str(mal_id)})'
                             filename_ = str(sanitize_filename(filename_))
-                            filepath_ = path_joins(fold, filename_)
+                            filepath_ = path.join(fold, filename_)
                             
                             if dupli_mode != 3:
                                 if filename_ in ml.songs_already_downloaded:
@@ -151,17 +151,17 @@ def run_(window: sg.Window, username, progresses: List[Tuple[sg.Text, sg.Progres
                                     filename_ = f'{filename_} - {_id}.mp3'
                                     
                                     if username != _username:
-                                        cprint(f'[*] Copying file "{path_joins(_username, _type, filename_)}" to "{path_joins(username, list_type, filename_)}"', 'yellow')
+                                        cprint(f'[*] Copying file "{path.join(_username, _type, filename_)}" to "{path.join(username, list_type, filename_)}"', 'yellow')
                                         ml.copy(username, list_type, filename_)
                                         
                                     elif dupli_mode == 0:
                                         if _type != list_type:
-                                            cprint(f'[*] Moving file "{path_joins(_username, _type, filename_)}" to "{path_joins(username, list_type, filename_)}"', 'yellow')
+                                            cprint(f'[*] Moving file "{path.join(_username, _type, filename_)}" to "{path.join(username, list_type, filename_)}"', 'yellow')
                                             ml.move(username, list_type, filename_)
                                         
                                     elif dupli_mode == 1:
                                         if _type != list_type:
-                                            cprint(f'[*] Copying file "{path_joins(_username, _type, filename_)}" to "{path_joins(username, list_type, filename_)}"', 'yellow')
+                                            cprint(f'[*] Copying file "{path.join(_username, _type, filename_)}" to "{path.join(username, list_type, filename_)}"', 'yellow')
                                             ml.copy(username, list_type, filename_)
                                     continue
                                     
@@ -198,7 +198,7 @@ def run_(window: sg.Window, username, progresses: List[Tuple[sg.Text, sg.Progres
                             
                             filename = f'{request} ({str(mal_id)}) - {video_id}.mp3'
                             filename = str(sanitize_filename(filename))
-                            filepath = path_joins(fold, filename)
+                            filepath = path.join(fold, filename)
                             
                             song_thread = st.SongDownloadThread(response, filepath, request)
                             future = executor.submit(song_thread.run, progress_callback(window), free_index)
@@ -235,7 +235,20 @@ def run_(window: sg.Window, username, progresses: List[Tuple[sg.Text, sg.Progres
                 all_stopped = True
                         
     cprint('[I] All downloads ended', 'green')
+    
+    st.deinit()
+    
+    print('[I] ST Deinit')
+    
     window['--DOWNLOAD_STOP--'].click()
+    
+# def run_2(window: sg.Window, username: str, stopped: Event, lists=DEFAULT_LISTS, list_provider: AnimeList,
+#                  dupli_mode=0, dir=ml.get_default_dir(), thread_count):
+#     st.init(thread_count=thread_count)
+    
+#     mal = Mal(username)
+#     with ThreadPoolExecutor(max_workers=thread_count) as executor:
+#         for anime in mal.get_animes()
         
 def main():
     global should_update_progress

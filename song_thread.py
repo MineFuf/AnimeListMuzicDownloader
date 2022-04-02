@@ -1,5 +1,6 @@
-from os import terminal_size
+from os import terminal_size, environ
 from threading import Thread
+
 import pafy
 from time import sleep
 from threading import RLock
@@ -27,7 +28,7 @@ class SongDownloadThread:
         def _cancel():
             # print(f'[I] Canceling song download thread {self.index}')
             self.audio.cancel()
-            # print(f'[I] Succesfully stopped')
+            # print(f'[I] Succesfully stopped thread {self.index}')
             self.percent = 100
             self.running = False
         
@@ -40,8 +41,8 @@ class SongDownloadThread:
             callback()
         
         try:
-            self.yt = pafy.new(self.link)
-            self.audio = self.yt.getbestaudio()
+            yt = pafy.new(self.link)
+            self.audio = yt.getbestaudio()
             # print('[I] Found best audio')
             self.cancel = _cancel
             # print('[I] Starting download')
@@ -50,7 +51,7 @@ class SongDownloadThread:
             cprint(f'[E] {e}; {e.__traceback__.tb_lineno}', 'red')
             self.running = False
         
-        # print(f'[I] Download {self.index} succesfully ended')
+        print(f'[I] Download {self.index} succesfully ended')
         self.percent = 100
         callback()
         self.running = False

@@ -1,2 +1,6 @@
 __pycache__/
 venv/
+morsee31/
+tests/mal_test.py
+tests/pafy_test.py
+tests/response.json

@@ -10,7 +10,31 @@
             "request": "launch",
             "program": "${workspaceRoot}/main.py",
             "console": "integratedTerminal",
-            "justMyCode": true
+            "justMyCode": false
+        }, {
+            "name": "Python: pafy test",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceRoot}/tests/pafy_test.py",
+            "console": "integratedTerminal",
+            "workingDirectory": "${workspaceRoot}/tests",
+            "justMyCode": false
+
+        }, {
+            "name": "Python: mal test",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceRoot}/tests/mal_test.py",
+            "console": "integratedTerminal",
+            "workingDirectory": "${workspaceRoot}/tests",
+            "justMyCode": false
+
+        }, {
+            "name": "Python: Tests",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceRoot}/tests.py",
+            "console": "integratedTerminal"
         }
     ]
 }

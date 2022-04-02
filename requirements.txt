@@ -1,8 +1,6 @@
-requests
-pathvalidate
-youtube_search_python
-yaspin
-jikanpy
-termcolor
-pafy
-PySimpleGUIQt
+pafy==0.5.5
+pathvalidate==2.5.0
+PySimpleGUIQt==0.35.0
+requests==2.26.0
+termcolor==1.1.0
+youtube-dl==2020.12.2

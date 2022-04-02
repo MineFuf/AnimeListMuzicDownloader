@@ -3,7 +3,6 @@ from os import path
 import os
 from constants import *
 import shutil
-from helpers import path_joins
 
 def get_default_dir():
     test_file = DEFAULT_DIR_FILE_TEST
@@ -21,11 +20,11 @@ def is_downloaded(user, name):
 
 def copy(user, type, name):
     _user, _type = files_already_downloaded[name]
-    shutil.copy2(path_joins(library_dir, _user, _type, name), path_joins(library_dir, user, type, name))
+    shutil.copy2(path.join(library_dir, _user, _type, name), path.join(library_dir, user, type, name))
 
 def move(user, type, name):
     _user, _type = files_already_downloaded[name]
-    os.rename(path_joins(library_dir, _user, _type, name), path_joins(library_dir, user, type, name))
+    os.rename(path.join(library_dir, _user, _type, name), path.join(library_dir, user, type, name))
     
     
 library_dir = get_default_dir()

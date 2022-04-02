@@ -1,10 +1,14 @@
 from os import path
-from typing import List
+from typing import Callable, List
 
-def path_joins(*ps):
-    if len(ps) == 0:
-        return ''
-    s = ps[0]
-    for p in ps[1:]:
-        s = path.join(s, p)
-    return s
+def retry(func:Callable, on_retry: Callable, max_retries:int=5, *args, **kwargs):
+    was_error = True
+    retries = 0
+    while was_error and (retries < max_retries or retries <= 0):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            was_error = not on_retry(e)
+            retries += 1
+            
+    return None
