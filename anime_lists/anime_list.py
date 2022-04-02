@@ -2,11 +2,13 @@ from typing import Iterator
 
 
 class Anime:
-    def __init__(self, title: str, list_type: str, page: int):
+    def __init__(self, id, title: str, list_type: str, page: int, ops: int, eds: int):
+        self.id = id
         self.title = title
         self.list_type = list_type
         self.page = page
-
+        self.ops = ops
+        self.eds = eds
 
 class AnimeList:
     @staticmethod

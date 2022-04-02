@@ -50,7 +50,8 @@ class SongDownloadThread:
         except Exception as e:
             cprint(f'[E] {e}; {e.__traceback__.tb_lineno}', 'red')
             self.running = False
-        
+
+        # print(f'[I] Finished downloading song {self.index}')
         print(f'[I] Download {self.index} succesfully ended')
         self.percent = 100
         callback()

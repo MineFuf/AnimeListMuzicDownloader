@@ -11,35 +11,57 @@ class Mal(AnimeList):
         page = retry(
             get,
             lambda e: e.response.status_code == 404,
-            0,
-            f'https://api.myanimelist.net/v2/users/{user}/animelist?limit=1',
+            0, 0.2,
+            f"https://api.myanimelist.net/v2/users/{user}/animelist?limit=1",
             headers={"X-MAL-CLIENT-ID": "788e9404debd2b5f32516de1a4bab8a9"},
         )
-        
+
         return bool(page)
 
     def get_animes(self) -> Iterator[Anime]:
         statuses = ["watching", "completed", "on_hold", "dropped", "plan_to_watch"]
         for status in statuses:
-            url = f"https://api.myanimelist.net/v2/animelist/{self.user}?status={status}&limit=1000"
+            url = f"https://api.myanimelist.net/v2/users/{self.user}/animelist?status={status}&limit=1000"
 
             get_page = lambda: retry(
                 get,
                 lambda e: e.response.status_code == 404,
                 0,
+                0.1,
                 url,
                 headers={"X-MAL-CLIENT-ID": "788e9404debd2b5f32516de1a4bab8a9"},
             )
 
             page_number = 1
+            print('[I] Getting page 1')
             while page := loads(get_page().content):
                 anime_list = page["data"]
                 for json_anime in anime_list:
-                    anime = Anime(json_anime["node"]["title"], status, page_number)
+                    mal_id = json_anime["node"]["id"]
+                    details_url = f"https://api.myanimelist.net/v2/anime/{mal_id}?fields=opening_themes,ending_themes"
+
+                    details = loads(retry(
+                        get,
+                        lambda e: e.response.status_code == 404,
+                        0,
+                        0.2,
+                        details_url,
+                        headers={"X-MAL-CLIENT-ID": "788e9404debd2b5f32516de1a4bab8a9"},
+                    ).content)
+
+                    anime = Anime(
+                        mal_id,
+                        json_anime["node"]["title"],
+                        status,
+                        page_number,
+                        len(details["opening_themes"]) if 'opening_themes' in details else 0,
+                        len(details["ending_themes"]) if 'ending_themes' in details else 0,
+                    )
                     yield anime
 
-                if page["paging"].has_key("next"):
+                if 'next' in page['paging']:
                     page_number += 1
                     url = page["paging"]["next"]
+                    print(f'[I] Getting page {page_number}')
                 else:
                     break
