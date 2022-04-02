@@ -1,0 +1,8 @@
+requests
+pathvalidate
+youtube_search_python
+yaspin
+jikanpy
+termcolor
+pafy
+PySimpleGUIQt
