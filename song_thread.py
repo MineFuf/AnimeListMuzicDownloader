@@ -52,7 +52,7 @@ class SongDownloadThread:
             self.running = False
 
         # print(f'[I] Finished downloading song {self.index}')
-        print(f'[I] Download {self.index} succesfully ended')
+        print(f'\033[F[I] Download {self.index} succesfully ended')
         self.percent = 100
         callback()
         self.running = False
