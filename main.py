@@ -14,7 +14,6 @@ from concurrent.futures import wait
 import muzic_library as ml
 from anime_lists import AnimeList, Mal
 import song_thread as st
-from constants import *
 
 should_update_progress = True
 
@@ -98,15 +97,17 @@ def run_2(window: sg.Window, username: str, stopped: Event, list_provider: type,
                     full_filename_ = path.join(types_dir, filename_)
                     if username != _username:
                         cprint(
-                            f'[*] Copying file "{path.join(_username, _type, filename_)}" to "{full_filename_}"', 'yellow')
+                            f'[*] Copying file "{path.join(_username, _type, filename_)}" to "{full_filename_}"',
+                            'yellow')
                         ml.copy(username, list_type, filename_)
                     else:
                         if _type != list_type:
                             cprint(
-                                f'[*] Moving file "{path.join(_username, _type, filename_)}" to "{full_filename_}"', 'yellow')
+                                f'[*] Moving file "{path.join(_username, _type, filename_)}" to "{full_filename_}"',
+                                'yellow')
                             ml.move(username, list_type, filename_)
 
-                search_res_list = yt.CustomSearch(request, yt.VideoDurationFilter.short, limit=1).result()['result']
+                search_res_list: dict = yt.CustomSearch(request, yt.VideoDurationFilter.short, limit=1).result()['result']
                 if type(search_res_list) != list or len(search_res_list) == 0:
                     print(f'[*] Video ({request}) wasn\'t found, skipping')
                     continue
