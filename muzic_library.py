@@ -8,9 +8,9 @@ import shutil
 def get_default_dir():
     test_file = DEFAULT_DIR_FILE_TEST
     if test_file in os.listdir('.'):
-        return '..'
+        return path.join('..', DEFAULT_LIBRARY_NAME)
     else:
-        return '.'
+        return path.join('.', DEFAULT_LIBRARY_NAME)
 
 
 def make_list_folder(user, type):
@@ -41,23 +41,23 @@ already_downloaded_count = 0
 usernames = []
 
 
-def init_library(dir=None):
+def init_library():
     global library_dir, already_downloaded_count, files_already_downloaded, songs_already_downloaded, usernames
-    if dir is not None:
-        library_dir = dir
     # loop throught all users
     print('[I] Looking for downloaded files')
-    for user in os.listdir(library_dir):
-        user_dir = path.join(library_dir, user)
-        usernames.append(user)
-        # loop throught all lists that we can download to
-        for list in DEFAULT_LISTS:
-            p = path.join(user_dir, list)
-            if path.isdir(p):
-                files = os.listdir(p)
-                already_downloaded_count += len(files)
-                files_already_downloaded.update({file: (user.lower(), list) for file in files})
-                songs_already_downloaded.update(
-                    {' - '.join(file.split(' - ')[:-1]): (user.lower(), list, file.split(' - ')[-1].replace('.mp3', ''))
-                     for file in files if not file.endswith('.part')})
+    if path.isdir(library_dir):
+        for user in os.listdir(library_dir):
+            user_dir = path.join(library_dir, user)
+            usernames.append(user)
+            # loop throught all lists that we can download to
+            for list in DEFAULT_LISTS:
+                p = path.join(user_dir, list)
+                if path.isdir(p):
+                    files = os.listdir(p)
+                    already_downloaded_count += len(files)
+                    files_already_downloaded.update({file: (user.lower(), list) for file in files})
+                    songs_already_downloaded.update(
+                        {' - '.join(file.split(' - ')[:-1]): (
+                            user.lower(), list, file.split(' - ')[-1].replace('.mp3', ''))
+                            for file in files if not file.endswith('.part')})
     print(f'[I] Found {already_downloaded_count} files')

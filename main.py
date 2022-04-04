@@ -28,9 +28,8 @@ def progress_callback(window):
     return _callback
 
 
-def run2(window: sg.Window, username: str, list_provider: type, thread_count: int,
-         dir=ml.get_default_dir()) -> Tuple[Event, Thread]:
-    library_thread = Thread(target=ml.init_library, args=(dir,))
+def run2(window: sg.Window, username: str, list_provider: type, thread_count: int) -> Tuple[Event, Thread]:
+    library_thread = Thread(target=ml.init_library)
     library_thread.start()
     print('[I] Library thread started')
 
@@ -61,7 +60,7 @@ def run_2(window: sg.Window, username: str, stopped: Event, list_provider: type,
 
             print('[I] Doing anime number ' + str(anime_idx + 1))
 
-            types_dir = path.join(username, anime.list_type)
+            types_dir = path.join(ml.library_dir, username, anime.list_type)
             absolute_types_dir = path.join(ml.library_dir, types_dir)
 
             os.makedirs(types_dir, exist_ok=True)
@@ -107,7 +106,8 @@ def run_2(window: sg.Window, username: str, stopped: Event, list_provider: type,
                                 'yellow')
                             ml.move(username, list_type, filename_)
 
-                search_res_list: dict = yt.CustomSearch(request, yt.VideoDurationFilter.short, limit=1).result()['result']
+                search_res_list: dict = yt.CustomSearch(request, yt.VideoDurationFilter.short, limit=1).result()[
+                    'result']
                 if type(search_res_list) != list or len(search_res_list) == 0:
                     print(f'[*] Video ({request}) wasn\'t found, skipping')
                     continue
@@ -226,7 +226,8 @@ def main():
         return exists
 
     def cancel_request():
-        resp = sg.PopupOKCancel('Are you sure you want to cancel download?', keep_on_top=True)
+        resp = sg.PopupOKCancel(
+            'Are you sure you want to cancel download? Downloads will stop after already runnig ones', keep_on_top=True)
         return resp != 'Cancel'
 
     # UI loop
@@ -243,37 +244,40 @@ def main():
         if event == 'username_button':
             check_username()
         if event == 'download_button':
-            if not run_thread_running:
-                print('[I] Checking username')
-                if not check_username():
-                    continue
-
-                ml.library_dir = values['dir_input']
-
-                print('[I] ml.library: ' + str(ml.library_dir))
-
-                window['download_button']('Cancel download')
-                for dis in to_disable:
-                    window[dis](disabled=True)
-
-                window['exit_button'](visible=False)
-                window.VisibilityChanged()
-
-                for i in range(len(progresses)):
-                    progresses[i][0].update(visible=False)
-                    progresses[i][1].update(visible=False)
-
-                print('[I] Updating visibility')
-                for i in range(values['thread_count_combo']):
-                    progresses[i][0].update(visible=True)
-                    progresses[i][1].update(visible=True)
-
-                run_thread = run2(window, values["username_input"], Mal, values['thread_count_combo'], ml.library_dir)
-                run_thread_running = True
-            else:
-                cprint('[E] Download already running', 'yellow')
+            if run_thread_running:
+                print('[I] Download already running, runnig cancel dialog')
                 if cancel_request():
                     run_thread[0].set()
+                continue
+
+            print('[I] Checking username')
+            if not check_username():
+                continue
+
+            ml.library_dir = values['dir_input']
+
+            print('[I] ml.library: ' + str(ml.library_dir))
+
+            window['download_button']('Cancel download')
+            for dis in to_disable:
+                window[dis](disabled=True)
+
+            window['exit_button'](visible=False)
+            window.VisibilityChanged()
+
+            # Make all progress bars invisible
+            for i in range(len(progresses)):
+                progresses[i][0].update(visible=False)
+                progresses[i][1].update(visible=False)
+
+            # Make all progress bars visible which are needed
+            print('[I] Updating visibility')
+            for i in range(values['thread_count_combo']):
+                progresses[i][0].update(visible=True)
+                progresses[i][1].update(visible=True)
+
+            run_thread = run2(window, values["username_input"], Mal, values['thread_count_combo'])
+            run_thread_running = True
         if event == 'thread_count_combo':
             print(f'[I] User choose {values[event]} threads to run async')
         if event == '--PROGRESS_UPDATE--':
@@ -281,8 +285,8 @@ def main():
                 if run_thread_running and thread is not None:
                     if hasattr(thread[1], 'percent'):
                         progresses[i][1].UpdateBar(thread[1].percent)
-                    if hasattr(thread[1], 'total_kb') and hasattr(thread[1], 'rate'):
-                        progresses[i][0].update(value=thread[1].request + ': ' + str(thread[1].total_kb) + 'kB, ' + str(
+                    if hasattr(thread[1], 'total_mb') and hasattr(thread[1], 'rate'):
+                        progresses[i][0].update(value=thread[1].request + ': ' + str(thread[1].total_mb) + 'MB, ' + str(
                             round(thread[1].rate, 1)) + 'kB/s')
 
             should_update_progress = True
