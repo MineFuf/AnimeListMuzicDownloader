@@ -1,4 +1,7 @@
-__pycache__/
-venv*/
-tests/
-muzic/
+/__pycache__/
+/venv*/
+/tests/
+/muzic/
+/build/
+/dist/
+/almuzic/

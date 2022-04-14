@@ -1,3 +1,4 @@
+"""
 import os
 import PySimpleGUIQt as sg
 
@@ -11,13 +12,16 @@ import youtubesearchpython as yt
 from concurrent.futures.thread import ThreadPoolExecutor
 from concurrent.futures import wait
 
-import muzic_library as ml
-from anime_lists import AnimeList, Mal
-import song_thread as st
+import old_muzic_library as ml
+from anime_providers import AnimeProvider, Mal
+# import song_thread as st
+"""
+
+from app import App
 
 should_update_progress = True
 
-
+"""
 def progress_callback(window):
     def _callback():
         global should_update_progress
@@ -48,7 +52,7 @@ def run2(window: sg.Window, username: str, list_provider: type, thread_count: in
 def run_2(window: sg.Window, username: str, stopped: Event, list_provider: type, thread_count: int):
     st.init(thread_count=thread_count)
 
-    mal: AnimeList = list_provider(username)
+    mal: AnimeProvider = list_provider(username)
     with ThreadPoolExecutor(max_workers=thread_count) as executor:
         page_num = 1
         list_type = ''
@@ -106,7 +110,7 @@ def run_2(window: sg.Window, username: str, stopped: Event, list_provider: type,
                                 'yellow')
                             ml.move(username, list_type, filename_)
 
-                search_res_list: dict = yt.CustomSearch(request, yt.VideoDurationFilter.short, limit=1).result()[
+                search_res_list: list = yt.CustomSearch(request, yt.VideoDurationFilter.short, limit=1).result()[
                     'result']
                 if type(search_res_list) != list or len(search_res_list) == 0:
                     print(f'[*] Video ({request}) wasn\'t found, skipping')
@@ -191,7 +195,7 @@ def main():
         [
             sg.Text('Anime Music Dir: '),
             sg.Input(ml.library_dir, key='dir_input', disabled=True, enable_events=True),
-            sg.FolderBrowse(initial_folder=ml.get_default_dir(), key='dir_browse')],
+            sg.FolderBrowse(initial_folder=ml.library_dir, key='dir_browse')],
 
         [sg.Text('Thread count: '),
          sg.Combo(list(range(1, MAX_PROGRESSES + 1)), default_value=1, key='thread_count_combo', enable_events=True)],
@@ -316,8 +320,10 @@ def main():
 
     window.close()
     print('[!] Exiting program')
-
+"""
 
 # run program
 if __name__ == '__main__':
-    main()
+    # main()
+    App()
+    print('[!] Exiting program')

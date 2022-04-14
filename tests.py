@@ -1,6 +1,6 @@
 import unittest
 
-from anime_lists import TestMal
+from tests import test_mal
 
 if __name__ == "__main__":
     unittest.main()

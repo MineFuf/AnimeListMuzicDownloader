@@ -1,11 +1,11 @@
-from typing import Iterator
-from .anime_list import AnimeList, Anime
+from typing import Iterator, List
+from .anime_provider import AnimeProvider, Anime
 from requests import get
 from json import loads
 from helpers import retry
 
 
-class Mal(AnimeList):
+class Mal(AnimeProvider):
     @staticmethod
     def check_username(user: str) -> bool:
         page = retry(
@@ -18,8 +18,16 @@ class Mal(AnimeList):
 
         return bool(page)
 
+    @staticmethod
+    def get_list_types() -> List[str]:
+        return ['watching', 'completed', 'on_hold', 'dropped', 'plan_to_watch']
+
+    @staticmethod
+    def get_provider_name() -> str:
+        return 'MAL'
+
     def get_animes(self) -> Iterator[Anime]:
-        statuses = ["watching", "completed", "on_hold", "dropped", "plan_to_watch"]
+        statuses = Mal.get_list_types()
         for status in statuses:
             url = f"https://api.myanimelist.net/v2/users/{self.user}/animelist?status={status}&limit=1000"
 
@@ -56,12 +64,13 @@ class Mal(AnimeList):
                         page_number,
                         len(details["opening_themes"]) if 'opening_themes' in details else 0,
                         len(details["ending_themes"]) if 'ending_themes' in details else 0,
+                        self,
                     )
                     yield anime
 
                 if 'next' in page['paging']:
                     page_number += 1
                     url = page["paging"]["next"]
-                    print(f'[I] Getting page {page_number}')
+                    # print(f'[I] Getting page {page_number}')
                 else:
                     break
