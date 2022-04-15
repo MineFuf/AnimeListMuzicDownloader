@@ -31,14 +31,15 @@ class Mal(AnimeProvider):
         for status in statuses:
             url = f"https://api.myanimelist.net/v2/users/{self.user}/animelist?status={status}&limit=1000"
 
-            get_page = lambda: retry(
-                get,
-                lambda e: e.response.status_code == 404,
-                0,
-                0.1,
-                url,
-                headers={"X-MAL-CLIENT-ID": "788e9404debd2b5f32516de1a4bab8a9"},
-            )
+            def get_page():
+                return retry(
+                    get,
+                    lambda e: e.response.status_code == 404,
+                    0,
+                    0.1,
+                    url,
+                    headers={"X-MAL-CLIENT-ID": "788e9404debd2b5f32516de1a4bab8a9"},
+                )
 
             page_number = 1
             print('[I] Getting page 1')

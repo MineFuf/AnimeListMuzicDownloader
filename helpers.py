@@ -1,5 +1,4 @@
-from os import path
-from typing import Callable, List
+from typing import Callable
 from time import sleep
 
 

@@ -71,6 +71,7 @@ class Youtube(SongProvider):
         super().__init__(library)
 
     def search(self, query: SongQuery, type_dir: str) -> SongDownload:
+        # TODO: Use retry function
         results: list = yt.CustomSearch(query.query, yt.VideoDurationFilter.short, limit=1).result()['result']
         if type(results) is not list or len(results) == 0:
             raise SongNotFound(query)

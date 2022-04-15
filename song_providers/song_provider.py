@@ -1,5 +1,4 @@
 from abc import abstractmethod
-from threading import Thread
 from typing import Callable
 
 from pathvalidate import sanitize_filename
