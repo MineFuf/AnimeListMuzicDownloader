@@ -1,14 +1,16 @@
 from __future__ import annotations
-from concurrent.futures import ThreadPoolExecutor, Future
+from concurrent.futures import ThreadPoolExecutor, Future, CancelledError, TimeoutError
 from os import path, makedirs
 from threading import Event, Thread
 from time import sleep
-from typing import Union, List, Callable, Type, Optional
+from typing import Union, List, Callable, Type, Optional, Tuple
 import PySimpleGUIQt as sg
+from termcolor import cprint
 
 from muzic_library import Library
 from anime_providers import Mal, AnimeProvider
 from song_providers import SongProvider, SongQuery
+from song_providers.song_provider import SongNotFound, StreamNotFound
 from song_providers.youtube import Youtube
 from constants import *
 
@@ -59,12 +61,31 @@ class App:
 
             futures: List[Optional[Future]] = [None] * self.thread_count
 
-            def find_free_future():
-                while True:
-                    for i, future in enumerate(futures):
-                        if future is None or future.done():
-                            return i
-                    sleep(0.1)
+            def check_futures_for_exception() -> Tuple[int, BaseException | None] | None:
+                for i, future in enumerate(futures):
+                    if future is not None:
+                        try:
+                            return i, future.exception(0.0001)
+                        except TimeoutError:
+                            continue
+                        except CancelledError:
+                            continue
+                    return None
+
+            def check_future(future: Future):
+                try:
+                    return future.exception(0.0001)
+                except TimeoutError:
+                    return None
+                except CancelledError:
+                    return None
+
+            # def find_free_future():
+            #     while True:
+            #         for i, future in enumerate(futures):
+            #             if future is None or future.done():
+            #                 return i
+            #         sleep(0.1)
 
             def update_progress(i: int, done: int, total: int):
                 self.progresses[i].update(done, total)
@@ -99,8 +120,31 @@ class App:
                                 [SongQuery(anime, i + 1, True) for i in range(anime.eds)]
 
                     for song_query in to_search:
-                        stream = self.song_provider.search(song_query, list_type)
-                        index = find_free_future()
+                        try:
+                            stream = self.song_provider.search(song_query, list_type)
+                        except SongNotFound:
+                            cprint(f'[E] Song not found: {song_query}', 'red')
+                            continue
+
+                        # Find free future (done or nonexistent or errored)
+                        index = None
+                        while True:
+                            for i, future in enumerate(futures):
+                                if future is None or future.done():
+                                    if future is not None and (future_exception := check_future(future)) is not None:
+                                        cprint(f'[E] Future exception: {future_exception}', 'red')
+                                        try:
+                                            raise future_exception
+                                        except StreamNotFound:
+                                            cprint(f'[E] Stream not found: {song_query}', 'red')
+                                        except Exception as e:
+                                            raise e
+
+                                    index = i
+
+                            if index is not None:
+                                break
+                            sleep(0.1)
 
                         self.progresses[index].title = song_query.query
 

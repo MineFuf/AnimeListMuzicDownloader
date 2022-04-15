@@ -5,6 +5,7 @@ import pytube as ptb
 
 from muzic_library import Library, SongFile
 from .song_provider import SongProvider, SongQuery, SongDownload, SongNotFound, StreamNotFound
+from helpers import retry
 
 
 class YoutubeSongDownload(SongDownload):
@@ -71,9 +72,11 @@ class Youtube(SongProvider):
         super().__init__(library)
 
     def search(self, query: SongQuery, type_dir: str) -> SongDownload:
-        # TODO: Use retry function
-        results: list = yt.CustomSearch(query.query, yt.VideoDurationFilter.short, limit=1).result()['result']
+        results: list = retry(
+            lambda: yt.CustomSearch(query.query, yt.VideoDurationFilter.short, limit=1).result()['result'],
+            lambda _: True, )
         if type(results) is not list or len(results) == 0:
+            print(f'[E] No results for {query}')
             raise SongNotFound(query)
 
         url, title, video_id = results[0]['link'], results[0]['title'], results[0]['id']
