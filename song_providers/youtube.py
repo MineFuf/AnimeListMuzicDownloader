@@ -34,7 +34,11 @@ class YoutubeSongDownload(SongDownload):
         if self.on_progress and self.progressbar_idx is None:
             raise RuntimeError('Progressbar not connected')
 
-        stream = self.video.streams.get_audio_only()
+        try:
+            stream = self.video.streams.get_audio_only()
+        except KeyError:
+            raise StreamNotFound(self.query)
+
         self.filesize = stream.filesize
 
         if self.on_progress:

@@ -1,3 +1,3 @@
-./venv/scripts/activate
-python main.py
-deactivate
+call venv\\scripts\\activate
+call python main.py
+call deactivate
